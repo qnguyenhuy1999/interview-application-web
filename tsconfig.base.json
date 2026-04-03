@@ -27,7 +27,9 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./apps/web/src/shared/*"],
+      "@features/*": ["./apps/web/src/features/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next", ".turbo"]
