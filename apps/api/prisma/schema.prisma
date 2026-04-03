@@ -49,10 +49,11 @@ model Quiz {
 }
 
 model QuizAttempt {
-  id       String   @id @default(cuid())
-  quizId   String   @map("quiz_id")
-  answers  Json
-  score    Float
+  id        String   @id @default(cuid())
+  quizId    String   @map("quiz_id")
+  answers   Json
+  score     Float
+  feedback  Json?
   createdAt DateTime @default(now()) @map("created_at")
 
   quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
