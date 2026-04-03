@@ -21,10 +21,13 @@ export class NotesService {
   }
 
   async findOne(userId: string, noteId: string) {
-    const note = await this.prisma.note.findUnique({ where: { id: noteId } });
+    const [note, quizCount] = await Promise.all([
+      this.prisma.note.findUnique({ where: { id: noteId } }),
+      this.prisma.quiz.count({ where: { noteId } }),
+    ]);
     if (!note) throw new NotFoundException('Note not found');
     if (note.userId !== userId) throw new ForbiddenException();
-    return note;
+    return { ...note, hasQuiz: quizCount > 0 };
   }
 
   async update(userId: string, noteId: string, dto: UpdateNoteDto) {

@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AiService } from '../ai/ai.service';
-import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { AiService } from "../ai/ai.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { SubmitQuizDto } from "./dto/submit-quiz.dto";
 
 @Injectable()
 export class QuizService {
@@ -12,8 +16,8 @@ export class QuizService {
 
   async generateQuiz(noteId: string, userId: string) {
     const note = await this.prisma.note.findUnique({ where: { id: noteId } });
-    if (!note) throw new NotFoundException('Note not found');
-    if (note.userId !== userId) throw new NotFoundException('Note not found');
+    if (!note) throw new NotFoundException("Note not found");
+    if (note.userId !== userId) throw new NotFoundException("Note not found");
 
     const questions = await this.aiService.generateQuiz(
       note.content,
@@ -33,48 +37,64 @@ export class QuizService {
       include: {
         note: true,
         attempts: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
-    if (!quiz) throw new NotFoundException('Quiz not found');
-    if (quiz.note.userId !== userId) throw new NotFoundException('Quiz not found');
+    if (!quiz) throw new NotFoundException("Quiz not found");
+    if (quiz.note.userId !== userId)
+      throw new NotFoundException("Quiz not found");
     return quiz;
   }
 
   async getPreviousQuiz(noteId: string, userId: string) {
     const note = await this.prisma.note.findUnique({ where: { id: noteId } });
-    if (!note) throw new NotFoundException('Note not found');
-    if (note.userId !== userId) throw new NotFoundException('Note not found');
+    if (!note) throw new NotFoundException("Note not found");
+    if (note.userId !== userId) throw new NotFoundException("Note not found");
 
     const quiz = await this.prisma.quiz.findFirst({
       where: { noteId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         attempts: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
 
     if (!quiz) {
-      return { quiz: null, message: 'No previous quiz found for this note' };
+      return { quiz: null, message: "No previous quiz found for this note" };
     }
 
-    return { quiz, message: 'Previous quiz loaded' };
+    return { quiz, message: "Previous quiz loaded" };
   }
 
   async submitQuiz(quizId: string, userId: string, dto: SubmitQuizDto) {
     const quiz = await this.getQuiz(quizId, userId);
     const questions = (quiz.questions as { questions: any[] }).questions;
 
+    const resolveQuestion = (questionId: string, answerIndex: number) => {
+      const byId = questions.find((q) => q?.id === questionId);
+      if (byId) return byId;
+
+      const indexMatch = /^q-(\d+)$/.exec(questionId);
+      if (indexMatch) {
+        const parsedIndex = Number(indexMatch[1]);
+        return questions[parsedIndex];
+      }
+
+      return questions[answerIndex];
+    };
+
     const evaluations = await Promise.all(
-      dto.answers.map((answer) =>
-        this.aiService.evaluateAnswer(
-          questions.find((q) => q.id === answer.questionId),
-          answer.answer,
-        ),
-      ),
+      dto.answers.map((answer, answerIndex) => {
+        const question = resolveQuestion(answer.questionId, answerIndex);
+        if (!question) {
+          throw new BadRequestException("Invalid quiz answer questionId");
+        }
+
+        return this.aiService.evaluateAnswer(question, answer.answer);
+      }),
     );
 
     const avgScore =
@@ -85,6 +105,7 @@ export class QuizService {
         quizId,
         answers: dto.answers as any,
         score: avgScore,
+        feedback: evaluations,
       },
     });
 
