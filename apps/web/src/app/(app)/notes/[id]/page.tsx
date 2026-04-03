@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useAuthStore } from '@/hooks/use-auth';
-import { apiRequest } from '@/lib/api';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import remarkGfm from 'remark-gfm';
+import { Button, Badge } from '@shared/components/atoms';
+import { PageContainer, PageHeader } from '@shared/components/templates';
+import { useAuthStore } from '@features/auth';
+import { getNote, deepDiveNote, generateQuiz, loadPreviousQuiz } from '@features/notes/api';
+import type { Note } from '@features/notes/types';
 
-interface Note {
-  id: string;
-  title: string;
-  topic?: string;
-  content: string;
-  aiExplanation?: string;
-  createdAt: string;
-}
+const ReactMarkdown = dynamic(
+  () => import('react-markdown').then((m) => m.default),
+  { ssr: false },
+);
 
 export default function NoteDetailPage() {
   const params = useParams();
@@ -27,26 +27,23 @@ export default function NoteDetailPage() {
   const [quizLoading, setQuizLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNote = () => {
+  const fetchNote = useCallback(() => {
     if (!token) return;
-    apiRequest<Note>(`/notes/${noteId}`, { token })
+    getNote(noteId, token)
       .then(setNote)
       .catch(() => setError('Failed to load note'))
       .finally(() => setLoading(false));
-  };
+  }, [token, noteId]);
 
   useEffect(() => {
     fetchNote();
-  }, [token, noteId]);
+  }, [fetchNote]);
 
   const handleDeepDive = async () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      await apiRequest(`/notes/${noteId}/deep-dive`, {
-        method: 'POST',
-        token,
-      });
+      await deepDiveNote(noteId, token);
       fetchNote();
     } catch {
       setError('Failed to generate deep dive');
@@ -59,10 +56,7 @@ export default function NoteDetailPage() {
     if (!token) return;
     setQuizLoading(true);
     try {
-      const result = await apiRequest<{ quizId: string }>(`/notes/${noteId}/generate-quiz`, {
-        method: 'POST',
-        token,
-      });
+      const result = await generateQuiz(noteId, token);
       router.push(`/quiz/${result.quizId}`);
     } catch {
       setError('Failed to generate quiz');
@@ -75,10 +69,7 @@ export default function NoteDetailPage() {
     if (!token) return;
     setQuizLoading(true);
     try {
-      const result = await apiRequest<{ quiz: { id: string } | null }>(`/notes/${noteId}/quiz/previous`, {
-        method: 'GET',
-        token,
-      });
+      const result = await loadPreviousQuiz(noteId, token);
       if (result.quiz) {
         router.push(`/quiz/${result.quiz.id}`);
       }
@@ -93,33 +84,25 @@ export default function NoteDetailPage() {
   if (!note) return <div className="p-6">Note not found</div>;
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-8">
-      <div className="mx-auto max-w-3xl space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <button onClick={() => router.back()} className="mb-2 text-sm text-muted-foreground hover:underline">
-              ← Back
-            </button>
-            <h1 className="text-2xl font-bold">{note.title}</h1>
-            {note.topic && (
-              <span className="mt-1 block text-sm text-muted-foreground">{note.topic}</span>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/notes/${noteId}/edit`)}
-            className="shrink-0 sm:self-start"
-          >
-            Edit
-          </Button>
-        </div>
+    <PageContainer maxWidth="lg">
+      <div className="space-y-6">
+        <PageHeader
+          title={note.title}
+          description={note.topic}
+          backHref="/notes"
+          actions={
+            <Button variant="outline" size="sm" onClick={() => router.push(`/notes/${noteId}/edit`)}>
+              Edit
+            </Button>
+          }
+        />
 
         {/* Note Content */}
         <div className="rounded-lg border p-4 sm:p-6">
           <h2 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Note</h2>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{note.content}</p>
+          <div className="prose prose-sm dark:prose-invert prose-neutral max-w-none text-muted-foreground">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.content}</ReactMarkdown>
+          </div>
         </div>
 
         {/* AI Deep Dive */}
@@ -128,9 +111,11 @@ export default function NoteDetailPage() {
           {note.aiExplanation ? (
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Generated</span>
+                <Badge variant="success">Generated</Badge>
               </div>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{note.aiExplanation}</p>
+              <div className="prose prose-sm dark:prose-invert prose-neutral max-w-none text-muted-foreground">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.aiExplanation}</ReactMarkdown>
+              </div>
             </div>
           ) : (
             <div className="py-4 text-center">
@@ -151,14 +136,16 @@ export default function NoteDetailPage() {
             <Button onClick={handleGenerateQuiz} disabled={quizLoading}>
               {quizLoading ? 'Loading...' : 'Generate New Quiz'}
             </Button>
-            <Button variant="secondary" onClick={handleLoadPreviousQuiz} disabled={quizLoading}>
-              Load Previous Quiz
-            </Button>
+            {note.hasQuiz && (
+              <Button variant="secondary" onClick={handleLoadPreviousQuiz} disabled={quizLoading}>
+                Load Previous Quiz
+              </Button>
+            )}
           </div>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
-    </div>
+    </PageContainer>
   );
 }
