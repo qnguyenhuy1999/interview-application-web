@@ -1,12 +1,15 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const quizQuestionSchema = z.object({
-  type: z.enum(['multiple_choice', 'open_ended']),
+  id: z.string().optional(),
+  type: z.enum(["multiple_choice", "open_ended", "scenario_based"]),
   question: z.string().min(1),
   options: z.array(z.string()).optional(),
   correctAnswer: z.string().optional(),
+  correct_answer: z.string().optional(),
   expectedKeyPoints: z.array(z.string()).optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
+  expected_key_points: z.array(z.string()).optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]),
 });
 
 export const submitQuizSchema = z.object({
@@ -14,7 +17,7 @@ export const submitQuizSchema = z.object({
     z.object({
       questionId: z.string(),
       answer: z.string(),
-    })
+    }),
   ),
 });
 

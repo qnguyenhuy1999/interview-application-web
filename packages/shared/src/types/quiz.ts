@@ -6,13 +6,15 @@ export interface Quiz {
 }
 
 export interface QuizQuestion {
-  id: string;
-  type: 'multiple_choice' | 'open_ended';
+  id?: string;
+  type: "multiple_choice" | "open_ended" | "scenario_based";
   question: string;
   options?: string[];
   correctAnswer?: string;
+  correct_answer?: string;
   expectedKeyPoints?: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
+  expected_key_points?: string[];
+  difficulty: "easy" | "medium" | "hard";
 }
 
 export interface QuizAttempt {
