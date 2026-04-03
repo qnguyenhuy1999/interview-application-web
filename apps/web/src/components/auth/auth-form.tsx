@@ -1,19 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { registerSchema, loginSchema, type RegisterSchema, type LoginSchema } from '@interview-app/shared/schemas';
+import { useAuthStore } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
-  onSuccess?: () => void;
 }
 
-export function AuthForm({ mode, onSuccess }: AuthFormProps) {
+export function AuthForm({ mode }: AuthFormProps) {
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,18 +42,20 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json() as { message?: string; accessToken?: string };
+      const result = await response.json() as { message?: string; accessToken?: string; user?: { id: string; email: string } };
 
       if (!response.ok) {
         setError(result.message || 'An error occurred');
         return;
       }
 
-      if (result.accessToken) {
+      if (result.accessToken && result.user) {
         localStorage.setItem('token', result.accessToken);
+        document.cookie = `accessToken=${result.accessToken}; path=/; SameSite=Lax`;
+        setAuth(result.accessToken, result.user);
       }
 
-      onSuccess?.();
+      router.push('/notes');
     } catch {
       setError('Network error. Please try again.');
     } finally {
