@@ -1,0 +1,5 @@
+# NestJS build output
+dist/
+
+# Local env files
+.env.local

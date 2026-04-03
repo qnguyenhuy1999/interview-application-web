@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  notes   Note[]
+
+  @@map("users")
+}
+
+model Note {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  title         String
+  content       String
+  topic         String?
+  aiExplanation String?   @map("ai_explanation")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizzes      Quiz[]
+  knowledgeGaps KnowledgeGap[]
+
+  @@map("notes")
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  noteId    String   @map("note_id")
+  questions Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  note     Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizAttempt {
+  id       String   @id @default(cuid())
+  quizId   String   @map("quiz_id")
+  answers  Json
+  score    Float
+  createdAt DateTime @default(now()) @map("created_at")
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
+
+model KnowledgeGap {
+  id          String   @id @default(cuid())
+  noteId      String   @map("note_id")
+  topic       String
+  description String
+  resolved    Boolean  @default(false)
+  weaknessLevel Int    @default(1) @map("weakness_level")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@map("knowledge_gaps")
+}
