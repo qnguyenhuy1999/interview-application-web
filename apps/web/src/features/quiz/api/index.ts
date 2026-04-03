@@ -1,0 +1,1 @@
+export { getQuiz, submitQuiz } from './quiz-api';
