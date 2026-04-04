@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../../database/prisma/prisma.service";
-import { Prisma } from "@prisma/client";
 import { KnowledgeGapWithNoteTitle } from "../../domain/entities/knowledge-gap.entity";
 import { KnowledgeGapRepositoryInterface } from "../../domain/repositories/knowledge-gap-repository.interface";
 
@@ -16,8 +15,8 @@ export class FindKnowledgeGapsUseCase {
       where: { userId },
       include: { knowledgeGaps: true },
     });
-    return notes.flatMap((note: Prisma.NoteGetPayload<{ include: { knowledgeGaps: true } }>) =>
-      note.knowledgeGaps.map((gap: Prisma.KnowledgeGapGetPayload<object>) => ({ ...gap, noteTitle: note.title })),
+    return notes.flatMap((note) =>
+      note.knowledgeGaps.map((gap) => ({ ...gap, noteTitle: note.title })),
     );
   }
 }
