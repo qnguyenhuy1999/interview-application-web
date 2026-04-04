@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@features/auth';
-import { getQuiz, submitQuiz } from '../api';
-import { QuizQuestionCard } from './quiz-question-card';
-import { Button } from '@shared/components/atoms';
-import type { Quiz, QuizEvaluation } from '@shared/types';
+import { useAuthStore } from "@features/auth";
+import type { Quiz, QuizEvaluation } from "@shared/types";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getQuiz, submitQuiz } from "../api";
+import { QuizHeader } from "./quiz-header";
+import { QuizNavigation } from "./quiz-navigation";
+import { QuizQuestionCard } from "./quiz-question-card";
 
 interface QuizClientProps {
   quizId: string;
@@ -19,10 +20,15 @@ export function QuizClient({ quizId, initialQuiz }: QuizClientProps) {
   const [quiz, setQuiz] = useState<Quiz | null>(initialQuiz ?? null);
   const [loading, setLoading] = useState(!initialQuiz);
   const [submitting, setSubmitting] = useState(false);
-  const [evaluations, setEvaluations] = useState<Record<string, QuizEvaluation>>({});
-  const [viewMode, setViewMode] = useState<'answering' | 'submitted' | 'review'>('answering');
+  const [evaluations, setEvaluations] = useState<
+    Record<string, QuizEvaluation>
+  >({});
+  const [viewMode, setViewMode] = useState<
+    "answering" | "submitted" | "review"
+  >("answering");
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (!initialQuiz && token) {
@@ -35,7 +41,9 @@ export function QuizClient({ quizId, initialQuiz }: QuizClientProps) {
             data.attempts[0].answers.forEach((a) => {
               prevAnswers[a.questionId] = a.answer;
             });
-            const savedFeedback = data.attempts[0].feedback as QuizEvaluation[] | null;
+            const savedFeedback = data.attempts[0].feedback as
+              | QuizEvaluation[]
+              | null;
             if (savedFeedback) {
               savedFeedback.forEach((ev, i) => {
                 const q = data.questions.questions[i];
@@ -47,23 +55,33 @@ export function QuizClient({ quizId, initialQuiz }: QuizClientProps) {
             }
             setAnswers(prevAnswers);
             setEvaluations(prevEvaluations);
-            setViewMode('review');
+            setViewMode("review");
           }
         })
-        .catch(() => setError('Failed to load quiz'))
+        .catch(() => setError("Failed to load quiz"))
         .finally(() => setLoading(false));
     }
   }, [initialQuiz, token, quizId]);
 
-  if (!initialQuiz && loading) return <div className="p-6">Loading...</div>;
-  if (!quiz) return <div className="p-6">Quiz not found</div>;
+  if (!initialQuiz && loading) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+  if (!quiz) return <div className="p-6 text-center">Quiz not found</div>;
 
   const questions = quiz.questions.questions;
-  const attempts = quiz.attempts || [];
-  const getQuestionKey = (q: typeof questions[0], idx: number) => q.id || `q-${idx}`;
+  const getQuestionKey = (q: (typeof questions)[0], idx: number) =>
+    q.id || `q-${idx}`;
   const allAnswered = questions.every((q, idx) =>
     answers[getQuestionKey(q, idx)]?.trim(),
   );
+
+  const isLastQuestion = currentIndex === questions.length - 1;
+  const currentQuestion = questions[currentIndex];
+  const questionKey = getQuestionKey(currentQuestion, currentIndex);
 
   const handleSubmit = async () => {
     if (!token) return;
@@ -73,7 +91,7 @@ export function QuizClient({ quizId, initialQuiz }: QuizClientProps) {
       const answerList = questions
         .map((q, idx) => {
           const questionId = getQuestionKey(q, idx);
-          return { questionId, answer: answers[questionId] || '' };
+          return { questionId, answer: answers[questionId] || "" };
         })
         .filter((entry) => entry.answer.trim().length > 0);
 
@@ -85,62 +103,62 @@ export function QuizClient({ quizId, initialQuiz }: QuizClientProps) {
         if (q) evalMap[getQuestionKey(q, i)] = ev;
       });
       setEvaluations(evalMap);
-      setViewMode('submitted');
+      setViewMode("submitted");
+      setCurrentIndex(0);
     } catch {
-      setError('Failed to submit quiz');
+      setError("Failed to submit quiz");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {questions.map((q, idx) => {
-        const questionKey = getQuestionKey(q, idx);
-        return (
+    <div className="mx-auto max-w-3xl space-y-8 animate-fade-in pb-32 pt-6 sm:pt-10">
+      {/* Top Header & Progress Bar */}
+      <QuizHeader
+        currentIndex={currentIndex}
+        totalQuestions={questions.length}
+        viewMode={viewMode}
+      />
+
+      {error && (
+        <p className="text-sm text-destructive font-bold p-4 bg-destructive/10 rounded-xl">
+          {error}
+        </p>
+      )}
+
+      {/* Center Stage Card Container */}
+      <div className="min-h-100">
+        <div key={questionKey} className="animate-fade-in-up">
           <QuizQuestionCard
-            key={questionKey}
-            question={q}
-            index={idx}
+            question={currentQuestion}
+            index={currentIndex}
             answer={answers[questionKey]}
             evaluation={evaluations[questionKey]}
             viewMode={viewMode}
-            onAnswerChange={(key, value) =>
-              setAnswers((prev) => ({ ...prev, [key]: value }))
-            }
+            onAnswerChange={(key, value) => {
+              setError(null);
+              setAnswers((prev) => ({ ...prev, [key]: value }));
+            }}
           />
-        );
-      })}
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        {viewMode === 'answering' ? (
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || !allAnswered}
-            className="w-full sm:w-auto"
-          >
-            {submitting ? 'Submitting...' : 'Submit Quiz'}
-          </Button>
-        ) : (
-          <Button
-            onClick={() => router.push(`/notes/${quiz.note.id}`)}
-            className="w-full sm:w-auto"
-          >
-            Back to Note
-          </Button>
-        )}
-        {viewMode === 'answering' && (
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/notes/${quiz.note.id}`)}
-            className="w-full sm:w-auto"
-          >
-            Back
-          </Button>
-        )}
+        </div>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {/* Sticky Bottom Context / Navigation */}
+      <QuizNavigation
+        currentIndex={currentIndex}
+        totalQuestions={questions.length}
+        isLastQuestion={isLastQuestion}
+        viewMode={viewMode}
+        allAnswered={allAnswered}
+        submitting={submitting}
+        onPrev={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+        onNext={() =>
+          setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))
+        }
+        onSubmit={handleSubmit}
+        onReturn={() => router.push(`/notes/${quiz.note.id}`)}
+      />
     </div>
   );
 }

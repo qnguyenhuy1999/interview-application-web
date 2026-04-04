@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: interview_app
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - microservices-network
+
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - CORS_ORIGIN=http://localhost:3001
+      - AUTH_SERVICE_URL=http://auth-service:3002
+      - NOTES_SERVICE_URL=http://notes-service:3003
+      - QUIZ_SERVICE_URL=http://quiz-service:3004
+      - AI_SERVICE_URL=http://ai-service:3005
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-change-in-production
+      - RATE_LIMIT_WINDOW_MS=60000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    depends_on:
+      - auth-service
+      - notes-service
+      - quiz-service
+      - ai-service
+      - redis
+    networks:
+      - microservices-network
+
+  auth-service:
+    build:
+      context: ./apps/services/auth-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_app
+      - JWT_SECRET=dev-secret-change-in-production
+    depends_on:
+      - postgres
+    networks:
+      - microservices-network
+
+  notes-service:
+    build:
+      context: ./apps/services/notes-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_app
+    depends_on:
+      - postgres
+    networks:
+      - microservices-network
+
+  quiz-service:
+    build:
+      context: ./apps/services/quiz-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3004
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_app
+      - AI_SERVICE_URL=http://ai-service:3005
+    depends_on:
+      - postgres
+      - ai-service
+    networks:
+      - microservices-network
+
+  ai-service:
+    build:
+      context: ./apps/services/ai-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3005
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - microservices-network
+
+  # Legacy monolith (used for gradual migration)
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_app
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:3001
+      - JWT_SECRET=dev-secret-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      - postgres
+    networks:
+      - microservices-network
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  microservices-network:
+    driver: bridge

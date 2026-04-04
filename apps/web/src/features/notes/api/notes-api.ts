@@ -1,9 +1,13 @@
 import { apiClient } from '@shared/lib/api-client';
-import type { Note, GenerateQuizResponse, PreviousQuizResponse } from '@shared/types';
+import type { Note, NoteGroup, GenerateQuizResponse, PreviousQuizResponse } from '@shared/types';
 import type { User } from '@shared/types';
 
 export async function getNotes(token: string): Promise<Note[]> {
   return apiClient<Note[]>('/notes', { token });
+}
+
+export async function getNotesGrouped(token: string): Promise<NoteGroup[]> {
+  return apiClient<NoteGroup[]>('/notes/grouped', { token });
 }
 
 export async function getNote(noteId: string, token: string): Promise<Note> {

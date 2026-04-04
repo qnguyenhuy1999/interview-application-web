@@ -16,16 +16,18 @@ function QuizLoading() {
   );
 }
 
-export default function QuizPage({
+export default async function QuizPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   return (
-    <PageContainer maxWidth="md">
+    <div className="w-full -mt-6 sm:-mt-10">
       <Suspense fallback={<QuizLoading />}>
-        <QuizClient quizId={params.id} />
+        <QuizClient quizId={id} />
       </Suspense>
-    </PageContainer>
+    </div>
   );
 }

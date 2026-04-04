@@ -17,16 +17,20 @@ export function NavbarClient() {
 
   return (
     <>
-      <button
-        onClick={handleLogout}
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        Logout
-      </button>
+      {/* Desktop specific buttons */}
+      <div className="hidden md:flex items-center gap-4">
+        <button
+          onClick={handleLogout}
+          className="rounded-full px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300"
+        >
+          Log Out
+        </button>
+      </div>
 
+      {/* Mobile toggle button */}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="flex size-9 items-center justify-center rounded-md border sm:hidden"
+        className="flex size-10 items-center justify-center rounded-xl bg-muted/50 hover:bg-muted transition-colors md:hidden text-foreground ml-auto"
         aria-label="Toggle menu"
       >
         <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,21 +42,24 @@ export function NavbarClient() {
         </svg>
       </button>
 
+      {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="border-b px-4 py-3 sm:hidden">
-          <Link
-            href="/notes"
-            onClick={() => setMenuOpen(false)}
-            className="block py-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            Notes
-          </Link>
-          <button
-            onClick={() => { setMenuOpen(false); handleLogout(); }}
-            className="mt-2 block w-full text-left py-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            Logout
-          </button>
+        <div className="absolute left-0 top-full w-full border-b bg-background/95 backdrop-blur-xl px-6 py-4 shadow-xl md:hidden animate-fade-in z-50">
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/notes"
+              onClick={() => setMenuOpen(false)}
+              className="block rounded-lg px-4 py-3 text-base font-medium text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={() => { setMenuOpen(false); handleLogout(); }}
+              className="block w-full text-left rounded-lg px-4 py-3 text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       )}
     </>

@@ -1,3 +1,4 @@
+export type { NoteGroup } from '../../../../../packages/shared/src/types/note';
 export interface Note {
   id: string;
   title: string;

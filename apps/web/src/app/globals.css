@@ -2,24 +2,53 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(240 10% 3.9%);
+  --color-background: hsl(210 40% 98%); /* Soft, cool slate off-white */
+  --color-foreground: hsl(222 47% 11%); /* Deep modern navy */
   --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(240 10% 3.9%);
-  --color-primary: hsl(240 5.9% 10%);
-  --color-primary-foreground: hsl(0 0% 98%);
-  --color-secondary: hsl(240 4.8% 95.9%);
-  --color-secondary-foreground: hsl(240 5.9% 10%);
-  --color-muted: hsl(240 4.8% 95.9%);
-  --color-muted-foreground: hsl(240 3.8% 46.1%);
-  --color-accent: hsl(240 4.8% 95.9%);
-  --color-accent-foreground: hsl(240 5.9% 10%);
+  --color-card-foreground: hsl(222 47% 11%);
+  
+  /* Primary: Indigo / Violet tones */
+  --color-primary: hsl(262 83% 58%); 
+  --color-primary-foreground: hsl(210 40% 98%);
+  
+  /* Secondary: Soft Slate */
+  --color-secondary: hsl(214 32% 91%);
+  --color-secondary-foreground: hsl(222 47% 11%);
+  
+  --color-muted: hsl(210 40% 96%);
+  --color-muted-foreground: hsl(215 16% 47%);
+  
+  --color-accent: hsl(262 83% 96%); /* Very light primary tone */
+  --color-accent-foreground: hsl(262 83% 58%);
+  
   --color-destructive: hsl(0 84.2% 60.2%);
   --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(240 5.9% 90%);
-  --color-input: hsl(240 5.9% 90%);
-  --color-ring: hsl(240 5.9% 10%);
-  --radius: 0.5rem;
+  
+  --color-border: hsl(214 32% 91%);
+  --color-input: hsl(214 32% 91%);
+  --color-ring: hsl(262 83% 58%);
+  
+  --radius: 1rem; /* More rounded, modern look */
+
+  --animate-fade-in: fade-in 0.6s ease-out forwards;
+  --animate-fade-in-up: fade-in-up 0.8s ease-out forwards;
+  --animate-float: float 4s ease-in-out infinite;
+  
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
 }
 
 @layer base {
@@ -29,5 +58,8 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    /* Very subtle gradient background */
+    background-image: radial-gradient(circle at top center, hsl(0 0% 100%) 0%, var(--color-background) 100%);
+    background-attachment: fixed;
   }
 }

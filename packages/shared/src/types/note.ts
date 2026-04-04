@@ -1,3 +1,8 @@
+export interface NoteGroup {
+  topic: string;
+  notes: Note[];
+}
+
 export interface Note {
   id: string;
   userId: string;
@@ -5,8 +10,8 @@ export interface Note {
   content: string;
   topic?: string;
   aiExplanation?: string;
-  createdAt: Date;
-  updatedAt?: Date;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateNoteRequest {

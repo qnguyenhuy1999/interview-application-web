@@ -1,5 +1,6 @@
 export {
   getNotes,
+  getNotesGrouped,
   getNote,
   createNote,
   deepDiveNote,

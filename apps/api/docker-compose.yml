@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: interview_app
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dev-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - dev-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_app
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:3000
+      - JWT_SECRET=dev-secret-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - dev-network
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  dev-network:
+    driver: bridge

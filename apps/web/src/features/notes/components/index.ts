@@ -1,3 +1,9 @@
 export { NoteCard } from './note-card';
 export { NoteList } from './note-list';
+export { NoteListContainer } from './note-list-container';
+export { NoteSidebar } from './note-sidebar';
+export { NoteSearch } from './note-search';
+export { NoteGrid } from './note-grid';
+export { NoteEmptyState } from './note-empty-state';
 export { NoteForm } from './note-form';
+export { NoteDetailClient } from './note-detail-client';
