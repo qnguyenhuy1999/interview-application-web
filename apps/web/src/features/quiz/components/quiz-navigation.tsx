@@ -20,6 +20,7 @@ export function QuizNavigation({
   currentIndex,
   totalQuestions,
   isLastQuestion,
+  viewMode,
   allAnswered,
   submitting,
   onPrev,
