@@ -6,6 +6,18 @@ import {
     KnowledgeGapRepositoryInterface,
 } from "../../domain/repositories/knowledge-gap-repository.interface";
 
+interface NoteWithKnowledgeGaps {
+  id: string;
+  title: string;
+  content: string;
+  topic: string | null;
+  aiExplanation: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  knowledgeGaps: KnowledgeGap[];
+}
+
 @Injectable()
 export class PrismaKnowledgeGapRepository implements KnowledgeGapRepositoryInterface {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,7 +27,7 @@ export class PrismaKnowledgeGapRepository implements KnowledgeGapRepositoryInter
       where: { userId },
       include: { knowledgeGaps: true },
     });
-    return notes.flatMap((note) => note.knowledgeGaps);
+    return notes.flatMap((note: NoteWithKnowledgeGaps) => note.knowledgeGaps);
   }
 
   async create(data: CreateKnowledgeGapData): Promise<KnowledgeGap> {
