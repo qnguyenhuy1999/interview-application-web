@@ -28,7 +28,7 @@ export class GenerateQuizUseCase {
 
     const quiz = await this.quizRepository.create({
       noteId,
-      questions: { questions: questions as unknown[] },
+      questions: { questions: questions },
     });
 
     return {

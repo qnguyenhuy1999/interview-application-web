@@ -8,7 +8,6 @@ import { ConfigModule } from '@nestjs/config';
 import { ApiGatewayController } from './gateway/api-gateway.controller';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],

@@ -168,7 +168,7 @@ export function NoteList({ onError }: NoteListProps) {
             </div>
             <h2 className="text-2xl font-bold">Your Syllabus is Empty</h2>
             <p className="mt-2 max-w-md text-base text-muted-foreground">
-              You haven't added any study topics yet. Start populating your mastery dashboard to begin interview training.
+              You haven&apos;t added any study topics yet. Start populating your mastery dashboard to begin interview training.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground text-left flex items-center gap-2">

@@ -6,7 +6,6 @@
 import {
   Controller,
   Get,
-  Post,
   All,
   Req,
   Res,
@@ -65,35 +64,35 @@ export class ApiGatewayController {
   // Auth routes
   @All('auth/:path(*)')
   @UseGuards(RateLimitGuard)
-  async proxyAuth(@Req() req: Request, @Res() res: Response, @Body() body: unknown) {
+  async proxyAuth(@Req() req: Request, @Res() res: Response, @Body() _body: unknown) {
     await this.proxy(req, res, this.services.auth);
   }
 
   // Notes routes
   @All('notes/:path(*)')
   @UseGuards(RateLimitGuard)
-  async proxyNotes(@Req() req: Request, @Res() res: Response, @Body() body: unknown) {
+  async proxyNotes(@Req() req: Request, @Res() res: Response, @Body() _body: unknown) {
     await this.proxy(req, res, this.services.notes);
   }
 
   // Quiz routes
   @All('quizzes/:path(*)')
   @UseGuards(RateLimitGuard)
-  async proxyQuiz(@Req() req: Request, @Res() res: Response, @Body() body: unknown) {
+  async proxyQuiz(@Req() req: Request, @Res() res: Response, @Body() _body: unknown) {
     await this.proxy(req, res, this.services.quiz);
   }
 
   // AI routes
   @All('ai/:path(*)')
   @UseGuards(RateLimitGuard)
-  async proxyAI(@Req() req: Request, @Res() res: Response, @Body() body: unknown) {
+  async proxyAI(@Req() req: Request, @Res() res: Response, @Body() _body: unknown) {
     await this.proxy(req, res, this.services.ai);
   }
 
   // Knowledge gaps routes
   @All('knowledge-gaps/:path(*)')
   @UseGuards(RateLimitGuard)
-  async proxyKnowledgeGaps(@Req() req: Request, @Res() res: Response, @Body() body: unknown) {
+  async proxyKnowledgeGaps(@Req() req: Request, @Res() res: Response, @Body() _body: unknown) {
     await this.proxy(req, res, this.services.notes);
   }
 

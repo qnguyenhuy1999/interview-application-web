@@ -22,7 +22,7 @@ export function NoteEmptyState() {
       </div>
       <h2 className="text-2xl font-bold">Your Syllabus is Empty</h2>
       <p className="mt-2 max-w-md text-base text-muted-foreground">
-        You haven't added any study topics yet. Start populating your mastery
+        You haven&apos;t added any study topics yet. Start populating your mastery
         dashboard to begin interview training.
       </p>
       <div className="mt-8 flex flex-col sm:flex-row gap-4">
